@@ -3,6 +3,7 @@ import matplotlib
 import pickle
 import scienceplots
 import os
+import json
 import numpy as np
 import pandas as pd
 import argparse
@@ -24,20 +25,9 @@ plt.rcParams.update({
 
 cm = 1/2.54
 
-# Calculate average FC matrix for each group (with regressed confounds)
-demo_data = pd.read_csv(args.demo_data_path)
-
-nmdare_fcs_regr = []
-hc_fcs_regr = []
-for subid in args.subids:
-    fc = np.loadtxt(os.path.join(args.fc_dir, f"sub-{subid}", f"sub-{subid}_FC_regr.csv"), delimiter=',')
-    if demo_data[demo_data["ID"] == subid]["nmdare"].item() == 1:
-        nmdare_fcs_regr.append(fc)
-    else:
-        hc_fcs_regr.append(fc)
-
-avg_nmdare_fc = np.mean(nmdare_fcs_regr, axis=0)
-avg_hc_fc = np.mean(hc_fcs_regr, axis=0)
+# Load the average FC matrices for each group
+avg_nmdare_fc = np.loadtxt(os.path.join(args.fc_dir, "task-rest_space-fsLR_seg-DesikanKilliany_den-91k_desc-reorderedAvgNmdareFc_relmat.tsv"), delimiter='\t')
+avg_hc_fc = np.loadtxt(os.path.join(args.fc_dir, "task-rest_space-fsLR_seg-DesikanKilliany_den-91k_desc-reorderedAvgHcFc_relmat.tsv"), delimiter='\t')
 
 # Load network information
 with open(os.path.join(args.network_dir, "networks.pkl"), "rb") as f:
@@ -84,15 +74,15 @@ cbar.ax.set_yticks([-0.2, 0.0, 0.8])
 cbar.ax.tick_params(labelsize=7, length=0)
 cbar.outline.set_linewidth(0.1)
 
-fig.savefig(os.path.join(args.fc_dir, "images", "avg_fc_comparison.png"), bbox_inches='tight')
+fig.savefig(os.path.join(args.fc_dir, "figures", "task-rest_space-fsLR_seg-DesikanKilliany_den-91k_desc-avgFcComparison_figure.png"), bbox_inches='tight')
 
 # Plot the significant differences between the average FC matrices, with network boundaries
-with open(os.path.join(args.fc_dir, "p_vals.csv"), "rb") as f:
-    p_vals = np.loadtxt(f, delimiter=',')
-with open(os.path.join(args.fc_dir, "stats.csv"), "rb") as f:
-    stats = np.loadtxt(f, delimiter=',')
-with open(os.path.join(args.fc_dir, "p_vals_fdr.csv"), "rb") as f:    
-    p_vals_fdr = np.loadtxt(f, delimiter=',')
+with open(os.path.join(args.fc_dir, "task-rest_space-fsLR_seg-DesikanKilliany_den-91k_desc-reorderedPairwiseComparisonPvals_relmat.tsv"), "rb") as f:
+    p_vals = np.loadtxt(f, delimiter='\t')
+with open(os.path.join(args.fc_dir, "task-rest_space-fsLR_seg-DesikanKilliany_den-91k_desc-reorderedPairwiseComparisonPvalsFdr_relmat.tsv"), "rb") as f:
+    stats = np.loadtxt(f, delimiter='\t')
+with open(os.path.join(args.fc_dir, "task-rest_space-fsLR_seg-DesikanKilliany_den-91k_desc-reorderedPairwiseComparisonTestStats_relmat.tsv"), "rb") as f:    
+    p_vals_fdr = np.loadtxt(f, delimiter='\t')
 
 fig, ax = plt.subplots(1, 2, figsize=(14.5*cm,8.96*cm), dpi=600)
 hc = ax[0].imshow(avg_hc_fc, cmap="viridis", vmin=-0.2, vmax=0.8)
@@ -143,7 +133,7 @@ cbar.ax.set_yticks([-0.2, 0.0, 0.8])
 cbar.ax.tick_params(labelsize=7, length=0)
 cbar.outline.set_linewidth(0.1)
 
-fig.savefig(os.path.join(args.fc_dir, "images", "p_vals_uncorrected.png"), bbox_inches='tight')
+fig.savefig(os.path.join(args.fc_dir, "figures", "task-rest_space-fsLR_seg-DesikanKilliany_den-91k_desc-pValsUncorrected_figure.png"), bbox_inches='tight')
 
 # Plot the corrected p-values
 fig, ax = plt.subplots(1, 2, figsize=(14.5*cm,8.96*cm), dpi=600)
@@ -195,4 +185,23 @@ cbar.ax.set_yticks([-0.2, 0.0, 0.8])
 cbar.ax.tick_params(labelsize=7, length=0)
 cbar.outline.set_linewidth(0.1)
 
-fig.savefig(os.path.join(args.fc_dir, "images", "p_vals_fdr.png"), bbox_inches='tight')
+fig.savefig(os.path.join(args.fc_dir, "figures", "task-rest_space-fsLR_seg-DesikanKilliany_den-91k_desc-pValsFdr_figure.png"), bbox_inches='tight')
+
+# Create json sidecars
+with open("resources/static_sidecar.json", "rb") as f:
+    sidecar = json.load(f)
+
+sources = [
+    "bids:static:task-rest_space-fsLR_seg-DesikanKilliany_den-91k_desc-reorderedAvgNmdareFc_relmat.tsv",
+    "bids:static:task-rest_space-fsLR_seg-DesikanKilliany_den-91k_desc-reorderedAvgHcFc_relmat.tsv",
+    "bids:static:task-rest_space-fsLR_seg-DesikanKilliany_den-91k_desc-reorderedPairwiseComparisonPvals_relmat.tsv",
+    "bids:static:task-rest_space-fsLR_seg-DesikanKilliany_den-91k_desc-reorderedPairwiseComparisonPvalsFdr_relmat.tsv",
+    "bids:static:task-rest_space-fsLR_seg-DesikanKilliany_den-91k_desc-reorderedPairwiseComparisonTestStats_relmat.tsv"
+]
+
+with open(os.path.join(args.fc_dir, "figures", "task-rest_space-fsLR_seg-DesikanKilliany_den-91k_desc-pValsUncorrected_figure.json"), "w") as f:
+    json.dump(sidecar, f)
+with open(os.path.join(args.fc_dir, "figures", "task-rest_space-fsLR_seg-DesikanKilliany_den-91k_desc-pValsFdr_figure.json"), "w") as f:
+    json.dump(sidecar, f)
+with open(os.path.join(args.fc_dir, "figures", "task-rest_space-fsLR_seg-DesikanKilliany_den-91k_desc-avgFcComparison_figure.json"), "w") as f:
+    json.dump(sidecar, f)
