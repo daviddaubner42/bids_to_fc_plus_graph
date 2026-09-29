@@ -9,6 +9,10 @@ Snakemake pipeline to create static and dynamic FC derivatives and calculate gra
 - **BIDS in / BIDS out** All the produced derivatives are stored in the BIDS format, ensuring further interoperability with other pipelines.
 - **Modular design** Thanks to the use of Snakemake, the pipeline is built out of smaller subcomponents that can be modified, excluded or exchanged for other implementations without the need to modify the whole pipeline.
 
+## Overview of the workflow
+
+![graph of the pipeline](dag.svg)
+
 ## Installation
 
 Download the code:
