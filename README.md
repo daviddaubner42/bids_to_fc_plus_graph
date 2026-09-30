@@ -18,7 +18,7 @@ Snakemake pipeline to create static and dynamic FC derivatives and calculate gra
 Download the code:
 
 ```bash
-git clone [LINK]
+git clone git@github.com:daviddaubner42/bids_to_fc_plus_graph.git
 ```
 
 Prepare a conda environment with Snakemake:
